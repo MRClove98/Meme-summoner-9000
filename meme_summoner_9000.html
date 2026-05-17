@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a14;font-family:'Nunito',sans-serif;color:#fff;min-height:100vh;overflow-x:hidden;transition:background .4s}
+  body.light{background:#f3f0ff;color:#111}
+  canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .ui{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;padding:24px 16px 120px;gap:14px}
+  .logo{font-family:'Bangers',cursive;font-size:clamp(2.6rem,8vw,4.8rem);letter-spacing:4px;line-height:1;background:linear-gradient(135deg,#ff006e,#ffbe0b,#3a86ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:lp 3s ease-in-out infinite}
+  @keyframes lp{0%,100%{filter:drop-shadow(0 0 16px rgba(255,0,110,.7))}50%{filter:drop-shadow(0 0 32px rgba(131,56,236,.8))}}
+  .sub{font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;text-align:center}
+  body.light .sub{color:rgba(0,0,0,.45)}
+  .counter-box{background:rgba(255,255,255,.06);border:2px solid #8338ec;border-radius:18px;padding:12px 36px;box-shadow:0 0 24px rgba(131,56,236,.4);text-align:center;transition:background .4s}
+  body.light .counter-box{background:#fff;box-shadow:0 0 24px rgba(131,56,236,.25)}
+  .clabel{font-size:.68rem;text-transform:uppercase;letter-spacing:3px;color:rgba(255,255,255,.45)}
+  body.light .clabel{color:rgba(0,0,0,.4)}
+  .cnum{font-family:'Bangers',cursive;font-size:3rem;line-height:1;background:linear-gradient(135deg,#ffbe0b,#ff006e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .btn{font-family:'Bangers',cursive;font-size:1.2rem;letter-spacing:2px;padding:12px 24px;border-radius:50px;border:none;cursor:pointer;position:relative;overflow:hidden;transition:transform .14s,box-shadow .3s}
+  .btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.13);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+  .btn:hover::after{transform:scaleX(1)}
+  .btn:active{transform:scale(.91)}
+  .b-summon{background:linear-gradient(135deg,#ff006e,#8338ec);color:#fff;font-size:1.5rem;padding:16px 44px;box-shadow:0 4px 28px rgba(255,0,110,.55);animation:sp 2s ease-in-out infinite}
+  @keyframes sp{0%,100%{box-shadow:0 4px 28px rgba(255,0,110,.55)}50%{box-shadow:0 4px 48px rgba(131,56,236,.75)}}
+  .b-chaos{background:linear-gradient(135deg,#ffbe0b,#ff4500);color:#111;box-shadow:0 4px 22px rgba(255,190,11,.5)}
+  .b-chaos.on{animation:cg .3s linear infinite}
+  @keyframes cg{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(360deg)}}
+  .b-rain{background:linear-gradient(135deg,#3a86ff,#06d6a0);color:#fff;box-shadow:0 4px 22px rgba(58,134,255,.45)}
+  .b-rain.on{animation:rw .4s ease infinite}
+  @keyframes rw{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  .b-theme{background:transparent;border:2px solid #8338ec;color:#fff;box-shadow:0 4px 16px rgba(131,56,236,.35)}
+  body.light .b-theme{color:#111}
+  .hint{font-size:.68rem;color:rgba(255,255,255,.4);letter-spacing:1px;text-align:center}
+  body.light .hint{color:rgba(0,0,0,.35)}
+  .hint kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:.72rem}
+  body.light .hint kbd{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.15)}
+  #stage{position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden}
+  .mcard{position:absolute;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;animation:mIn .45s cubic-bezier(.34,1.56,.64,1) forwards}
+  @keyframes mIn{from{transform:scale(0) rotate(var(--r));opacity:0}to{transform:scale(1) rotate(var(--r));opacity:1}}
+  .mcard.out{animation:mOut .55s ease forwards}
+  @keyframes mOut{to{opacity:0;transform:scale(.65) rotate(var(--r)) translateY(30px)}}
+  .mface{width:var(--sz);height:var(--sz);border-radius:14px;border:3px solid var(--bc);box-shadow:0 0 22px var(--bc),0 8px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:8px;gap:4px}
+  .mface-bg{position:absolute;inset:0}
+  .mface-emoji{font-size:calc(var(--sz) * .38);line-height:1;position:relative;z-index:1}
+  .mface-top,.mface-bot{font-family:'Bangers',cursive;font-size:calc(var(--sz) * .12);color:#fff;text-align:center;text-shadow:2px 2px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;letter-spacing:1px;line-height:1.15;position:relative;z-index:1;padding:0 4px;word-break:break-word}
+  .mcap{font-family:'Bangers',cursive;font-size:clamp(.8rem,2.2vw,1.05rem);letter-spacing:1px;color:#fff;text-shadow:0 0 10px var(--bc),2px 2px 0 #000,-1px -1px 0 #000;text-align:center;max-width:var(--sz)}
+  @keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}15%{transform:translate(-7px,5px) rotate(-.5deg)}30%{transform:translate(7px,-5px) rotate(.5deg)}45%{transform:translate(-5px,7px)}60%{transform:translate(5px,-7px)}80%{transform:translate(-2px,2px)}}
+  .shaking{animation:shake .5s ease}
+  @media(max-width:480px){.btn{font-size:.95rem;padding:10px 15px}.b-summon{font-size:1.25rem;padding:13px 28px}}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div id="stage"></div>
+
+<div class="ui">
+  <div style="text-align:center">
+    <div class="logo">MEME SUMMONER 9000</div>
+    <div class="sub">The Internet's Final Boss</div>
+  </div>
+  <div class="counter-box">
+    <div class="clabel">Memes Summoned</div>
+    <div class="cnum" id="cnt">0</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn b-summon" onclick="summon()">SUMMON MEME</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn b-chaos" id="bChaos" onclick="toggleChaos()">CHAOS MODE</button>
+    <button class="btn b-rain"  id="bRain"  onclick="toggleRain()">MEME RAIN</button>
+    <button class="btn b-theme" id="bTheme" onclick="toggleTheme()">LIGHT MODE</button>
+  </div>
+  <div class="hint">
+    SPACE summon &nbsp;|&nbsp; C chaos &nbsp;|&nbsp; R rain &nbsp;|&nbsp; T theme
+  </div>
+</div>
+
+<script>
+const MEMES=[
+  {e:'😐',bg:'#1a1a2e,#16213e',top:'one does not simply',bot:'walk into mordor'},
+  {e:'🐸',bg:'#2d6a4f,#1b4332',top:'feels good man',bot:'rare pepe spotted'},
+  {e:'🤔',bg:'#023e8a,#0077b6',top:'wait a minute...',bot:'hold up'},
+  {e:'😤',bg:'#9d0208,#370617',top:'this is fine',bot:'everything is fine'},
+  {e:'💀',bg:'#240046,#3c096c',top:'me when',bot:'💀💀💀'},
+  {e:'🐶',bg:'#7b4f00,#5c3a00',top:'this is fine',bot:'sipping coffee'},
+  {e:'😎',bg:'#222,#444',top:'deal with it',bot:'sunglasses on'},
+  {e:'😭',bg:'#0d1b2a,#1b263b',top:'WHY IS THIS',bot:'happening to me'},
+  {e:'🗿',bg:'#2a2a2a,#444',top:'',bot:'stone cold sigma'},
+  {e:'🤡',bg:'#7a0000,#500',top:'me trying to',bot:'adult today'},
+  {e:'😩',bg:'#1a006e,#2a008c',top:'lord give me',bot:'the strength'},
+  {e:'🧠',bg:'#5c0000,#7a0000',top:'big brain time',bot:'galaxy IQ'},
+  {e:'👀',bg:'#003366,#004080',top:'👀',bot:'i see everything'},
+  {e:'🎭',bg:'#4a004a,#6a006a',top:'two types of',bot:'people exist'},
+  {e:'🦆',bg:'#7a5200,#5c3a00',top:'unexpected',bot:'quack moment'},
+  {e:'😱',bg:'#8b0000,#600',top:'IT CANNOT BE',bot:'NO WAY BRO'},
+  {e:'🕺',bg:'#004d40,#00251a',top:'nobody:',bot:'me at 3am:'},
+  {e:'🍕',bg:'#4a0080,#300060',top:"it is not about",bot:'the pizza'},
+  {e:'⚡',bg:'#7a5c00,#5c4200',top:'UNLIMITED',bot:'POWER!!!'},
+  {e:'🌚',bg:'#111,#222',top:'me at 4am',bot:'not sleepy'},
+  {e:'🔥',bg:'#7a1a00,#5c1000',top:'everything is',bot:'FINE'},
+  {e:'🤯',bg:'#004a7a,#002d5c',top:'my brain when',bot:'Monday hits'},
+  {e:'🦁',bg:'#5c3a00,#3a2500',top:'remember who',bot:'you are king'},
+  {e:'👾',bg:'#003300,#001a00',top:'GAME OVER',bot:'insert coin'},
+  {e:'🫠',bg:'#003d5c,#00263a',top:'me pretending',bot:"I'm okay"},
+  {e:'🥴',bg:'#4a2000,#2a1000',top:'3 hours sleep',bot:'and coffee'},
+];
+
+const CAPTIONS=[
+  'bro what','average monday','skill issue','emotional damage',
+  'not my problem','living rent free','no thoughts','main character moment',
+  "it's giving chaos","understood the assignment","we so back","he's cooked",
+  'the audacity','coping and seething','zero survival instinct',
+  'this is fine','certified bruh moment','404: chill not found',
+  'chronically online','touch grass','gigachad behavior',
+  'the math is not mathing','NPC behavior detected','mid',
+  'brain.exe stopped','cope harder','absolute cinema',
+  'unhinged behavior','no thoughts head empty','fr fr no cap',
+  'sending thoughts','plot twist incoming','delulu to the max',
+  'real ones know','it do be like that','not the villain arc',
+];
+
+const COLORS=['#ff006e','#8338ec','#3a86ff','#ffbe0b','#06d6a0','#ff4500','#ff69b4','#adff2f'];
+
+let count=0,chaosOn=false,rainOn=false,lightOn=false;
+let chaosIv=null,rainIv=null;
+
+// Audio
+let AC=null;
+function ensureAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();}
+function vine(){ensureAC();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='sawtooth';o.frequency.setValueAtTime(220,AC.currentTime);o.frequency.exponentialRampToValueAtTime(18,AC.currentTime+.55);g.gain.setValueAtTime(.7,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.6);o.start();o.stop(AC.currentTime+.65);}
+function boing(){ensureAC();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='sine';o.frequency.setValueAtTime(90,AC.currentTime);o.frequency.exponentialRampToValueAtTime(900,AC.currentTime+.28);g.gain.setValueAtTime(.4,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.32);o.start();o.stop(AC.currentTime+.36);}
+function airhorn(){ensureAC();[233,311,466].forEach(f=>{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(.15,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.65);o.start();o.stop(AC.currentTime+.7);});}
+function woop(){ensureAC();[0,.18,.36].forEach((t,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='square';o.frequency.value=[380,500,320][i];g.gain.setValueAtTime(.1,AC.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+t+.13);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.16);});}
+const SFX=[vine,boing,airhorn,woop];
+function sfx(){try{SFX[Math.floor(Math.random()*SFX.length)]();}catch(e){}}
+
+// Particles
+const cv=document.getElementById('bgCanvas');
+const cx=cv.getContext('2d');
+let pts=[];
+function rsz(){cv.width=innerWidth;cv.height=innerHeight;}
+rsz();addEventListener('resize',rsz);
+function mkPt(x,y){pts.push({x:x??Math.random()*innerWidth,y:y??Math.random()*innerHeight,vx:(Math.random()-.5)*.7,vy:.4+Math.random()*1.3,sz:4+Math.random()*9,c:COLORS[Math.floor(Math.random()*COLORS.length)],circle:Math.random()>.5,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.06,a:.3+Math.random()*.55});}
+for(let i=0;i<90;i++)mkPt();
+function draw(){cx.clearRect(0,0,cv.width,cv.height);pts.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.rs;if(p.y>cv.height+20){pts.splice(i,1);mkPt(Math.random()*innerWidth,-10);return;}cx.save();cx.globalAlpha=p.a;cx.fillStyle=p.c;cx.translate(p.x,p.y);cx.rotate(p.rot);if(p.circle){cx.beginPath();cx.arc(0,0,p.sz/2,0,Math.PI*2);cx.fill();}else cx.fillRect(-p.sz/2,-p.sz/2,p.sz,p.sz);cx.restore();});requestAnimationFrame(draw);}
+draw();
+function burst(bx,by,col){for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*6;pts.push({x:bx,y:by,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,sz:5+Math.random()*7,c:Math.random()>.5?col:COLORS[Math.floor(Math.random()*COLORS.length)],circle:true,rot:0,rs:0,a:1});}}
+
+// Spawn
+function rnd(a,b){return a+Math.random()*(b-a);}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+function summon(px,py){
+  count++;
+  document.getElementById('cnt').textContent=count;
+  const m=pick(MEMES);
+  const cap=pick(CAPTIONS);
+  const col=pick(COLORS);
+  const sz=Math.round(rnd(110,200));
+  const rot=rnd(-18,18);
+  const maxX=innerWidth-sz-20,maxY=innerHeight-sz-80;
+  const x=px!==undefined?Math.min(Math.max(px-sz/2,10),maxX):rnd(10,maxX);
+  const y=py!==undefined?Math.min(Math.max(py-sz/2,10),maxY):rnd(10,maxY);
+
+  const card=document.createElement('div');
+  card.className='mcard';
+  card.style.cssText=`left:${x}px;top:${y}px;--r:${rot}deg;--sz:${sz}px;--bc:${col}`;
+
+  const bg=m.bg.split(',');
+  const face=document.createElement('div');
+  face.className='mface';
+
+  const bgDiv=document.createElement('div');
+  bgDiv.className='mface-bg';
+  bgDiv.style.cssText=`background:linear-gradient(135deg,${bg[0]},${bg[1]})`;
+
+  const emo=document.createElement('div');
+  emo.className='mface-emoji';
+  emo.textContent=m.e;
+
+  if(m.top){const t=document.createElement('div');t.className='mface-top';t.textContent=m.top;face.appendChild(bgDiv);face.appendChild(t);face.appendChild(emo);}
+  else{face.appendChild(bgDiv);face.appendChild(emo);}
+  if(m.bot){const b=document.createElement('div');b.className='mface-bot';b.textContent=m.bot;face.appendChild(b);}
+
+  const capEl=document.createElement('div');
+  capEl.className='mcap';
+  capEl.textContent=cap;
+
+  card.appendChild(face);
+  card.appendChild(capEl);
+  document.getElementById('stage').appendChild(card);
+
+  sfx();
+  document.body.classList.remove('shaking');
+  void document.body.offsetWidth;
+  document.body.classList.add('shaking');
+  setTimeout(()=>document.body.classList.remove('shaking'),500);
+  burst(x+sz/2,y+sz/2,col);
+
+  const life=chaosOn?1800:rainOn?2200:3200;
+  setTimeout(()=>{card.classList.add('out');setTimeout(()=>card.remove(),600);},life);
+}
+
+function toggleChaos(){
+  chaosOn=!chaosOn;
+  const b=document.getElementById('bChaos');
+  b.textContent=chaosOn?'STOP CHAOS':'CHAOS MODE';
+  b.classList.toggle('on',chaosOn);
+  if(chaosOn)chaosIv=setInterval(()=>summon(),380);
+  else clearInterval(chaosIv);
+}
+
+function toggleRain(){
+  rainOn=!rainOn;
+  const b=document.getElementById('bRain');
+  b.textContent=rainOn?'STOP RAIN':'MEME RAIN';
+  b.classList.toggle('on',rainOn);
+  if(rainOn)rainIv=setInterval(()=>summon(rnd(0,innerWidth),0),550);
+  else clearInterval(rainIv);
+}
+
+function toggleTheme(){
+  lightOn=!lightOn;
+  document.body.classList.toggle('light',lightOn);
+  document.getElementById('bTheme').textContent=lightOn?'DARK MODE':'LIGHT MODE';
+}
+
+document.getElementById('stage').addEventListener('click',e=>summon(e.clientX,e.clientY));
+
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
+  if(e.code==='Space'){e.preventDefault();summon();}
+  if(e.key==='c'||e.key==='C')toggleChaos();
+  if(e.key==='r'||e.key==='R')toggleRain();
+  if(e.key==='t'||e.key==='T')toggleTheme();
+});
+</script>
+</body>
+</html>
